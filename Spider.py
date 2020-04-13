@@ -4,6 +4,7 @@
 import sys
 import time
 import base64
+import random
 import optparse
 import requests
 
@@ -39,8 +40,10 @@ class FofaSpider(object):
 
     def spider(self,page):
         try:
+            # time.sleep(random.randint(3, 7))
             target = 'https://fofa.so/result?page={}&q={}&qbase64={}'.format(page,self.q, self.qbase64)
             res = self.s.get(url=target, headers=self.header).text
+            # time.sleep(random.randint(3,7))
             selector = etree.HTML(res)
             domain = selector.xpath('//*[@id="ajax_content"]/div/div/div/a/text()')
             for value in domain:
@@ -48,12 +51,13 @@ class FofaSpider(object):
                 value.strip(' ')
                 self.domains.add(value)
                 print(value)
+            time.sleep(random.randint(3,7))
         except Exception as e:
             print(e)
 
     def run(self):
         pool = ThreadPoolExecutor(2)
-        [pool.submit(self.spider,(i,)) for i in range(1,self.page)]
+        [pool.submit(self.spider,i) for i in range(1,self.page)]
 
 if __name__ == '__main__':
     options,args = cmd()
