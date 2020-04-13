@@ -1,11 +1,17 @@
-import threading
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
 import sys
-from urllib.parse import quote
-from lxml import etree
-import requests
-from fake_useragent import UserAgent
+import time
 import base64
 import optparse
+import requests
+
+from urllib.parse import quote
+from lxml import etree
+from fake_useragent import UserAgent
+from concurrent.futures import ThreadPoolExecutor
+
 
 def cmd():
     parser = optparse.OptionParser()
@@ -41,15 +47,13 @@ class FofaSpider(object):
                 # print(value)
                 value.strip(' ')
                 self.domains.add(value)
+                print(value)
         except Exception as e:
             print(e)
 
     def run(self):
-        threadlist = [threading.Thread(target=self.spider,args=(i,)) for i in range(1,self.page)]
-        for p in threadlist:
-            p.start()
-        for q in threadlist:
-            q.join()
+        pool = ThreadPoolExecutor(2)
+        [pool.submit(self.spider,(i,)) for i in range(1,self.page)]
 
 if __name__ == '__main__':
     options,args = cmd()
@@ -58,12 +62,5 @@ if __name__ == '__main__':
     qbase64 = quote(str(base64.b64encode(options.query.encode()),encoding='utf-8'))
     target = 'https://fofa.so/result?page={}&q={}&qbase64={}'.format(page, q, qbase64)
     cookie = options.cookie
-    # config = configparser.RawConfigParser()
-    # config.read('Info.ini',encoding='utf-8')
-    # cookie = config.get('Basic','cookie')
     test = FofaSpider(page,cookie,q,qbase64)
     test.run()
-    if len(threading.enumerate()) <= 1:
-        print('fofa高级查询语句普通用户只能查询第一页，非高级查询语句普通用户可以查询前五页')
-        for domain in test.domains:
-            print(domain)
